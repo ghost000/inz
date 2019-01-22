@@ -42,17 +42,18 @@ Window::Window(QWidget *parent) : QWidget(parent), pdfReader("")
     mainLayout->addWidget(text2TextBrowser, 2, 2, 1, 2);
 
     connect(new QShortcut(QKeySequence::Quit, this), &QShortcut::activated,
-        qApp, &QApplication::quit);
+            qApp, &QApplication::quit);
 }
 
 void Window::browse1()
 {
     QString directory =
         QDir::toNativeSeparators(QFileDialog::getOpenFileName(this, tr("Bowse PDF file"), QDir::currentPath(),
-                                                              tr("PDF file (*.pdf)")));
+                                 tr("PDF file (*.pdf)")));
     filename1 = directory;
 
-    if (!directory.isEmpty()) {
+    if (!directory.isEmpty())
+    {
         if (directoryComboBox1->findText(directory) == -1)
             directoryComboBox1->addItem(directory);
         directoryComboBox1->setCurrentIndex(directoryComboBox1->findText(directory));
@@ -72,10 +73,11 @@ void Window::browse2()
 {
     QString directory =
         QDir::toNativeSeparators(QFileDialog::getOpenFileName(this, tr("Bowse PDF file"), QDir::currentPath(),
-                                                              tr("PDF file (*.pdf)")));
+                                 tr("PDF file (*.pdf)")));
     filename2 = directory;
 
-    if (!directory.isEmpty()) {
+    if (!directory.isEmpty())
+    {
         if (directoryComboBox2->findText(directory) == -1)
             directoryComboBox2->addItem(directory);
         directoryComboBox2->setCurrentIndex(directoryComboBox2->findText(directory));
@@ -94,10 +96,10 @@ void Window::validate()
 {
     std::string error;
     plagiarismChecker = new PlagiarismChecker(
-                text1TextBrowser->textCursor().selectedText().toStdString(),
-                //text1.toStdString(),
-                text2.toStdString(),
-                error);
+        text1TextBrowser->textCursor().selectedText().toStdString(),
+        //text1.toStdString(),
+        text2.toStdString(),
+        error);
 
     auto result = plagiarismChecker->getResultOfPlagiarismChecking();
     for(auto i : result)
@@ -110,19 +112,21 @@ void Window::validate()
 
 
     QList<QTextEdit::ExtraSelection> extraSelections;
-      for(auto i : result) {
+    for(auto i : result)
+    {
         QTextEdit::ExtraSelection selection;
         selection.format = charFormat;
-        selection.format.setToolTip(QString::number(i.first));
+        //selection.format.setToolTip(QString::number(i.first));
         selection.cursor = cursor;
         selection.cursor.clearSelection();
         selection.cursor.setPosition(i.first);
         selection.cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, i.second.size());
         selection.cursor.mergeCharFormat(selection.format);
+        selection.cursor.setVisualNavigation(true);
         extraSelections.append(selection);
-      }
+    }
 
-      text2TextBrowser->setExtraSelections(extraSelections);
+    text2TextBrowser->setExtraSelections(extraSelections);
     /*for(auto i : result)
     {
         //QTextCursor cursor(text2TextBrowser->document());

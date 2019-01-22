@@ -1,10 +1,19 @@
-[Controller/pdfreader.cpp:105] -> [Controller/pdfreader.h:14]: (style, inconclusive) Technically the member function 'PdfReader::getPdfFileName' can be const.
-[Controller/pdfreader.h:9]: (style) Class 'PdfReader' has a constructor with 1 argument that is not explicit.
-[Controller/plagiarismchecker.h:17]: (style) Unused private function: 'PlagiarismChecker::splitWordFromFirstText'
-[Controller/plagiarismchecker.cpp:162] -> [Controller/plagiarismchecker.h:12]: (style, inconclusive) Technically the member function 'PlagiarismChecker::getResultOfPlagiarismChecking' can be const.
-[Controller/pdfreader.cpp:98]: (style) The function 'changePdfFilename' is never used.
-[Controller/pdfreader.cpp:105]: (style) The function 'getPdfFileName' is never used.
-[Controller/plagiarismchecker.cpp:162]: (style) The function 'getResultOfPlagiarismChecking' is never used.
-[Controller/pdfreader.cpp:66]: (style) The function 'getTxt' is never used.
-[Controller/plagiarismchecker.cpp:52]: (style) The function 'splitWordFromFirstText' is never used.
+[Controller/pdfreader.cpp:105] -> [Controller/pdfreader.h:14]:
+(style, inconclusive) Technically the member function 'PdfReader::getPdfFileName' can be const.
+[Controller/pdfreader.h:9]:
+(style) Class 'PdfReader' has a constructor with 1 argument that is not explicit.
+[Controller/plagiarismchecker.h:17]:
+(style) Unused private function: 'PlagiarismChecker::splitWordFromFirstText'
+[Controller/plagiarismchecker.cpp:162] -> [Controller/plagiarismchecker.h:12]:
+(style, inconclusive) Technically the member function 'PlagiarismChecker::getResultOfPlagiarismChecking' can be const.
+[Controller/pdfreader.cpp:98]:
+(style) The function 'changePdfFilename' is never used.
+[Controller/pdfreader.cpp:105]:
+(style) The function 'getPdfFileName' is never used.
+[Controller/plagiarismchecker.cpp:162]:
+(style) The function 'getResultOfPlagiarismChecking' is never used.
+[Controller/pdfreader.cpp:66]:
+(style) The function 'getTxt' is never used.
+[Controller/plagiarismchecker.cpp:52]:
+(style) The function 'splitWordFromFirstText' is never used.
 (information) Cppcheck cannot find all the include files (use --check-config for details)

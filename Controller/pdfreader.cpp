@@ -34,7 +34,7 @@ bool PdfReader::readFromTxt()
 
     if (!myReadFile.is_open())
     {
-      return false;
+        return false;
     }
     else
     {

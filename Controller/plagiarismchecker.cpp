@@ -104,8 +104,8 @@ void PlagiarismChecker::checker()
     buff1.erase(std::remove(buff1.begin(), buff1.end(), '\n'), buff1.end());
 
     auto it = std::search(buff.begin(), buff.end(),
-                       std::boyer_moore_searcher(
-                           buff1.begin(), buff1.end()));
+                          std::boyer_moore_searcher(
+                              buff1.begin(), buff1.end()));
     while(it != buff.end())
     {
 
@@ -113,8 +113,8 @@ void PlagiarismChecker::checker()
 
         it++;
         it = std::search(it, buff.end(),
-                               std::boyer_moore_searcher(
-                                   buff1.begin(), buff1.end()));
+                         std::boyer_moore_searcher(
+                             buff1.begin(), buff1.end()));
         std::cout << buff1 << "\n";
 
     }
