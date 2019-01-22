@@ -1,40 +1,23 @@
 #pragma once
 
-#include <string>
+#include <QString>
 #include <vector>
-#include <sstream>
-#include <iterator>
 
 class PlagiarismChecker
 {
 public:
-    PlagiarismChecker(const std::string& text1, const std::string& text2, std::string& error, const unsigned int& Precisions = 1);
-    const std::vector<std::pair<int, std::string>>& getResultOfPlagiarismChecking();
+    PlagiarismChecker(const QString& text1, const QString& text2, QString& error);
+    const std::vector<std::pair<int, int>>& getResultOfPlagiarismChecking();
 
 private:
-    void validate(const unsigned int& Precisions);
-    std::vector<std::string> split(const std::string &s, char delim);
-    void splitWordFromFirstText();
+    void validate();
     void checker();
 
+    const QString                    text1;
+    const QString                    text2;
+    QString                          pattern;
+    std::vector<std::pair<int, int>> result;
+    QString                          errorMessage;
 
-    const std::string                        text1;
-    const std::string                        text2;
-    short                                    precisions;
-    std::string                              pattern;
-    std::vector<std::pair<int, std::string>> result;
-    std::string                              errorMessage;
-    std::vector<std::string>                 splitWordsFromFirstText;
-
-    template<typename Out>
-    void split(const std::string &s, char delim, Out result)
-    {
-        std::stringstream ss(s);
-        std::string item;
-        while (std::getline(ss, item, delim))
-        {
-            *(result++) = item;
-        }
-    }
 };
 

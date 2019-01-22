@@ -1,29 +1,28 @@
 #pragma once
-
-#include <string>
+#include <QString>
 
 class PdfReader
 {
 
 public:
-    PdfReader(const std::string& pdfFilename);
+    PdfReader(const QString& pdfFilename);
     ~PdfReader() {}
 
-    const std::string& getTxt();
-    void               changePdfFilename(const std::string& pdfFilename);
-    const std::string& getPdfFileName();
+    const QString& getTxt();
+    void           changePdfFilename(const QString& pdfFilename);
+    const QString& getPdfFileName();
 
 private:
     bool convertPdfToTxt();
     bool readFromTxt();
     bool removeTxtFile();
 
-    std::string       pdfFileName;
-    std::string       txtFileName;
-    std::string       textFromTxt;
-    const std::string pdfToTextBashCommand;
-    const std::string removeFileBashCommand;
-    bool              isFirstWithThisPdf;
-    std::string       errorMessage;
+    QString       pdfFileName;
+    QString       txtFileName;
+    QString       textFromTxt;
+    const QString pdfToTextBashCommand;
+    const QString removeFileBashCommand;
+    bool          isFirstWithThisPdf;
+    QString       errorMessage;
 };
 

@@ -2,13 +2,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <fstream>
+#include <QFile>
 
-PdfReader::PdfReader(const std::string& pdfFilename)
+PdfReader::PdfReader(const QString& pdfFilename)
     : pdfFileName(pdfFilename)
-    , txtFileName(pdfFileName.substr(0,pdfFileName.size()-4)+".txt")
+    , txtFileName(pdfFilename.mid(0,pdfFileName.size()-4) + ".txt")
     , textFromTxt()
-    , pdfToTextBashCommand("pdftotext ")
+    , pdfToTextBashCommand("pdftotext -enc UTF-8 -layout ")
     , removeFileBashCommand("rm ")
     , isFirstWithThisPdf(true)
     , errorMessage()
@@ -16,8 +16,10 @@ PdfReader::PdfReader(const std::string& pdfFilename)
 
 bool PdfReader::convertPdfToTxt()
 {
-    const std::string buff(pdfToTextBashCommand + pdfFileName);
-    const int retValue = system(buff.c_str());
+    const QString buff(pdfToTextBashCommand + pdfFileName);
+    const QByteArray ba = buff.toLocal8Bit();
+    const char *c_str = ba.data();
+    const int retValue = system(c_str);
 
     if (retValue == -1 || WEXITSTATUS(retValue) != 0)
     {
@@ -29,31 +31,29 @@ bool PdfReader::convertPdfToTxt()
 
 bool PdfReader::readFromTxt()
 {
-    std::ifstream myReadFile;
-    myReadFile.open(txtFileName);
 
-    if (!myReadFile.is_open())
+    QFile file(txtFileName);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        return false;
-    }
-    else
-    {
-        std::string line;
-
-        while (std::getline(myReadFile, line))
-        {
-            textFromTxt.append(line + "\n");
-        }
+       return false;
     }
 
-    myReadFile.close();
+    while (!file.atEnd())
+    {
+        QString line = file.readLine();
+        textFromTxt.append(line);
+    }
+
+    file.close();
     return true;
 }
 
 bool PdfReader::removeTxtFile()
 {
-    const std::string buff(removeFileBashCommand + txtFileName);
-    const int retValue = system(buff.c_str());
+    const QString buff(removeFileBashCommand + txtFileName);
+    const QByteArray ba = buff.toLocal8Bit();
+    const char *c_str = ba.data();
+    const int retValue = system(c_str);
 
     if (retValue == -1 || WEXITSTATUS(retValue) != 0)
     {
@@ -63,7 +63,7 @@ bool PdfReader::removeTxtFile()
     return true;
 }
 
-const std::string &PdfReader::getTxt()
+const QString& PdfReader::getTxt()
 {
     textFromTxt.clear();
     if(isFirstWithThisPdf)
@@ -95,14 +95,14 @@ const std::string &PdfReader::getTxt()
     return errorMessage;
 }
 
-void PdfReader::changePdfFilename(const std::string& pdfFilename)
+void PdfReader::changePdfFilename(const QString& pdfFilename)
 {
     pdfFileName = pdfFilename;
-    txtFileName = pdfFileName.substr(0,pdfFileName.size()-4)+".txt";
+    txtFileName = pdfFilename.mid(0, pdfFileName.size()-4) + ".txt";
     isFirstWithThisPdf = true;
 }
 
-const std::string& PdfReader::getPdfFileName()
+const QString& PdfReader::getPdfFileName()
 {
     return pdfFileName;
 }

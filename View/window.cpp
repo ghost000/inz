@@ -7,29 +7,26 @@
 Window::Window(QWidget *parent) : QWidget(parent), pdfReader("")
 {
     setWindowTitle(tr("Antyplagiat"));
-    browseButton1 = new QPushButton(tr("&Browse first pdf"),this);
-    connect(browseButton1, &QAbstractButton::clicked, this, &Window::browse1);
 
-    browseButton2 = new QPushButton(tr("&Browse second pdf"),this);
-    connect(browseButton2, &QAbstractButton::clicked, this, &Window::browse2);
-
-    validateButton1 = new QPushButton(tr("&Validate"),this);
-    connect(validateButton1, &QAbstractButton::clicked, this, &Window::validate);
-
-    text1TextBrowser = new QTextBrowser();
-    text1TextBrowser->setReadOnly(true);
-
-    text2TextBrowser = new QTextBrowser();
-    text2TextBrowser->setReadOnly(true);
+    browseButton1           = new QPushButton(tr("&Browse first pdf"),this);
+    browseButton2           = new QPushButton(tr("&Browse second pdf"),this);
+    validateButton1         = new QPushButton(tr("&Validate"),this);
+    text1TextBrowser        = new QTextBrowser();
+    text2TextBrowser        = new QTextBrowser();
+    QGridLayout *mainLayout = new QGridLayout(this);
 
     directoryComboBox1 = createComboBox(QDir::toNativeSeparators(QDir::currentPath()));
-    connect(directoryComboBox1->lineEdit(), &QLineEdit::returnPressed, this, &Window::animateBrowseClick);
-
-
     directoryComboBox2 = createComboBox(QDir::toNativeSeparators(QDir::currentPath()));
+
+    text1TextBrowser->setReadOnly(true);
+    text2TextBrowser->setReadOnly(true);
+
+    connect(browseButton1, &QAbstractButton::clicked, this, &Window::browse1);
+    connect(browseButton2, &QAbstractButton::clicked, this, &Window::browse2);
+    connect(validateButton1, &QAbstractButton::clicked, this, &Window::validate);
+    connect(directoryComboBox1->lineEdit(), &QLineEdit::returnPressed, this, &Window::animateBrowseClick);
     connect(directoryComboBox2->lineEdit(), &QLineEdit::returnPressed, this, &Window::animateBrowseClick);
 
-    QGridLayout *mainLayout = new QGridLayout(this);
     mainLayout->addWidget(directoryComboBox1, 0, 0);
     mainLayout->addWidget(browseButton1, 0, 1);
     mainLayout->addWidget(directoryComboBox2, 0, 2);
@@ -48,8 +45,11 @@ Window::Window(QWidget *parent) : QWidget(parent), pdfReader("")
 void Window::browse1()
 {
     QString directory =
-        QDir::toNativeSeparators(QFileDialog::getOpenFileName(this, tr("Bowse PDF file"), QDir::currentPath(),
-                                 tr("PDF file (*.pdf)")));
+        QDir::toNativeSeparators(
+                QFileDialog::getOpenFileName(this
+                                             , tr("Bowse PDF file")
+                                             , QDir::currentPath()
+                                             , tr("PDF file (*.pdf)")));
     filename1 = directory;
 
     if (!directory.isEmpty())
@@ -59,9 +59,9 @@ void Window::browse1()
         directoryComboBox1->setCurrentIndex(directoryComboBox1->findText(directory));
     }
 
-    pdfReader.changePdfFilename(filename1.toStdString());
+    pdfReader.changePdfFilename(filename1);
 
-    text1 = QString::fromStdString(pdfReader.getTxt());
+    text1 = pdfReader.getTxt();
     text1TextBrowser->setText(text1);
 
     QFont serifFont("Times", 10);
@@ -72,8 +72,11 @@ void Window::browse1()
 void Window::browse2()
 {
     QString directory =
-        QDir::toNativeSeparators(QFileDialog::getOpenFileName(this, tr("Bowse PDF file"), QDir::currentPath(),
-                                 tr("PDF file (*.pdf)")));
+        QDir::toNativeSeparators(
+                QFileDialog::getOpenFileName(this
+                                             , tr("Bowse PDF file")
+                                             , QDir::currentPath()
+                                             , tr("PDF file (*.pdf)")));
     filename2 = directory;
 
     if (!directory.isEmpty())
@@ -83,9 +86,9 @@ void Window::browse2()
         directoryComboBox2->setCurrentIndex(directoryComboBox2->findText(directory));
     }
 
-    pdfReader.changePdfFilename(filename2.toStdString());
+    pdfReader.changePdfFilename(filename2);
 
-    text2 = QString::fromStdString(pdfReader.getTxt());
+    text2 = pdfReader.getTxt();
     text2TextBrowser->setText(text2);
 
     QFont serifFont("Times", 10);
@@ -94,12 +97,10 @@ void Window::browse2()
 
 void Window::validate()
 {
-    std::string error;
-    plagiarismChecker = new PlagiarismChecker(
-        text1TextBrowser->textCursor().selectedText().toStdString(),
-        //text1.toStdString(),
-        text2.toStdString(),
-        error);
+    QString error;
+    plagiarismChecker = new PlagiarismChecker(text1TextBrowser->textCursor().selectedText()
+                                              , text2
+                                              , error);
 
     auto result = plagiarismChecker->getResultOfPlagiarismChecking();
     for(auto i : result)
@@ -116,34 +117,17 @@ void Window::validate()
     {
         QTextEdit::ExtraSelection selection;
         selection.format = charFormat;
-        //selection.format.setToolTip(QString::number(i.first));
+        selection.format.setToolTip(QString::number(i.first));
         selection.cursor = cursor;
         selection.cursor.clearSelection();
         selection.cursor.setPosition(i.first);
-        selection.cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, i.second.size());
+        selection.cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, i.second);
         selection.cursor.mergeCharFormat(selection.format);
         selection.cursor.setVisualNavigation(true);
         extraSelections.append(selection);
     }
 
     text2TextBrowser->setExtraSelections(extraSelections);
-    /*for(auto i : result)
-    {
-        //QTextCursor cursor(text2TextBrowser->document());
-        std::cout << i.first << " " << i.second.size() << "\n";
-        //cursor.selectionStart()
-        cursor.setPosition(i.first);//, QTextCursor::KeepAnchor);
-        cursor.setPosition(i.second.size());//, QTextCursor::KeepAnchor);
-        cursor.select(QTextCursor::BlockUnderCursor);
-        //charFormat.setUnderlineStyle(QTextCharFormat::SingleUnderline);
-        cursor.setCharFormat(charFormat);
-        //cursor.clearSelection();
-
-        cursor.movePosition(QTextCursor::Start, QTextCursor::MoveAnchor);
-
-        cursor.selectionStart();
-    }*/
-
 }
 
 QComboBox *Window::createComboBox(const QString &text)

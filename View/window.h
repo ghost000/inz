@@ -15,7 +15,7 @@ class Window : public QWidget
 {
     Q_OBJECT
 public:
-    explicit Window(QWidget *parent = nullptr);
+    explicit Window(QWidget* parent = nullptr);
 
 private slots:
     void browse1();
@@ -24,19 +24,19 @@ private slots:
     void animateBrowseClick();
 
 private:
-    QComboBox   *createComboBox(const QString &text);
+    QComboBox* createComboBox(const QString &text);
 
-    QString      filename1;
-    QString      filename2;
-    QTextBrowser *text1TextBrowser;
-    QTextBrowser *text2TextBrowser;
-    QComboBox    *directoryComboBox1;
-    QComboBox    *directoryComboBox2;
-    QPushButton  *browseButton1;
-    QPushButton  *browseButton2;
-    QPushButton  *validateButton1;
-    PdfReader    pdfReader;
-    QString      text1;
-    QString      text2;
+    QString            filename1;
+    QString            filename2;
+    QTextBrowser       *text1TextBrowser;
+    QTextBrowser       *text2TextBrowser;
+    QComboBox          *directoryComboBox1;
+    QComboBox          *directoryComboBox2;
+    QPushButton        *browseButton1;
+    QPushButton        *browseButton2;
+    QPushButton        *validateButton1;
+    PdfReader          pdfReader;
+    QString            text1;
+    QString            text2;
     PlagiarismChecker* plagiarismChecker;
 };
