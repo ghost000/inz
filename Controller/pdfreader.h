@@ -3,9 +3,8 @@
 
 class PdfReader
 {
-
 public:
-    PdfReader(const QString& pdfFilename);
+    explicit PdfReader(const QString& pdfFilename);
     ~PdfReader() {}
 
     const QString& getTxt();
@@ -13,6 +12,7 @@ public:
     const QString& getPdfFileName();
 
 private:
+    int  executeBashCommand(const QString& BashCommand, const QString& fileName);
     bool convertPdfToTxt();
     bool readFromTxt();
     bool removeTxtFile();

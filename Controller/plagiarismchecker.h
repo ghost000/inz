@@ -6,18 +6,16 @@
 class PlagiarismChecker
 {
 public:
-    PlagiarismChecker(const QString& text1, const QString& text2, QString& error);
+    explicit PlagiarismChecker(const QString& Pattern, const QString& Text);
     const std::vector<std::pair<int, int>>& getResultOfPlagiarismChecking();
+    QString                                 validate();
+    void                                    checker();
+    void                                    setPattern(const QString& Pattern);
+    void                                    setText(const QString& Text);
 
 private:
-    void validate();
-    void checker();
-
-    const QString                    text1;
-    const QString                    text2;
+    QString                          text;
     QString                          pattern;
     std::vector<std::pair<int, int>> result;
-    QString                          errorMessage;
-
 };
 

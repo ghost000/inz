@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QWidget>
-#include <QDir>
 
 #include "Controller/pdfreader.h"
 #include "Controller/plagiarismchecker.h"
@@ -18,12 +17,12 @@ public:
     explicit Window(QWidget* parent = nullptr);
 
 private slots:
-    void browse1();
-    void browse2();
+    void browse(QString& filename, QString& text, QTextBrowser* textTextBrowser, QComboBox* directoryComboBox);
     void validate();
     void animateBrowseClick();
 
 private:
+    void       clear();
     QComboBox* createComboBox(const QString &text);
 
     QString            filename1;
@@ -35,8 +34,9 @@ private:
     QPushButton        *browseButton1;
     QPushButton        *browseButton2;
     QPushButton        *validateButton1;
+    QPushButton        *clearButton;
     PdfReader          pdfReader;
     QString            text1;
     QString            text2;
-    PlagiarismChecker* plagiarismChecker;
+    PlagiarismChecker  plagiarismChecker;
 };

@@ -1,7 +1,6 @@
 #include "pdfreader.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <QFile>
 
 PdfReader::PdfReader(const QString& pdfFilename)
@@ -14,12 +13,17 @@ PdfReader::PdfReader(const QString& pdfFilename)
     , errorMessage()
 {}
 
-bool PdfReader::convertPdfToTxt()
+int PdfReader::executeBashCommand(const QString& bashCommand, const QString& fileName)
 {
-    const QString buff(pdfToTextBashCommand + pdfFileName);
+    const QString buff(bashCommand + fileName);
     const QByteArray ba = buff.toLocal8Bit();
     const char *c_str = ba.data();
-    const int retValue = system(c_str);
+    return std::system(c_str);
+}
+
+bool PdfReader::convertPdfToTxt()
+{
+    const int retValue = executeBashCommand(pdfToTextBashCommand, pdfFileName);
 
     if (retValue == -1 || WEXITSTATUS(retValue) != 0)
     {
@@ -31,29 +35,26 @@ bool PdfReader::convertPdfToTxt()
 
 bool PdfReader::readFromTxt()
 {
-
     QFile file(txtFileName);
+
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-       return false;
+        return false;
     }
 
     while (!file.atEnd())
     {
-        QString line = file.readLine();
-        textFromTxt.append(line);
+        textFromTxt.append(file.readLine());
     }
 
     file.close();
+
     return true;
 }
 
 bool PdfReader::removeTxtFile()
 {
-    const QString buff(removeFileBashCommand + txtFileName);
-    const QByteArray ba = buff.toLocal8Bit();
-    const char *c_str = ba.data();
-    const int retValue = system(c_str);
+    const int retValue = executeBashCommand(removeFileBashCommand, txtFileName);
 
     if (retValue == -1 || WEXITSTATUS(retValue) != 0)
     {
@@ -66,6 +67,7 @@ bool PdfReader::removeTxtFile()
 const QString& PdfReader::getTxt()
 {
     textFromTxt.clear();
+
     if(isFirstWithThisPdf)
     {
         isFirstWithThisPdf = false;

@@ -17,7 +17,7 @@ QT       += core gui
 # deprecated API in order to know how to port your code away from it.
                                             DEFINES += QT_DEPRECATED_WARNINGS
                                                     CONFIG += c++17
-                                                            QMAKE_CXXFLAGS += -std=c++17# -Wall -Wextra -Werror -pedantic -ansi -Wshadow #-Weffc++
+                                                            QMAKE_CXXFLAGS += -std=c++17# -Wall -Wextra -Werror -pedantic -Wshadow
 
 # You can also make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
