@@ -5,10 +5,10 @@
 
 PdfReader::PdfReader(const QString& pdfFilename)
     : pdfFileName(pdfFilename)
-    , txtFileName(pdfFilename.mid(0,pdfFileName.size()-4) + ".txt")
+    , txtFileName(pdfFilename.mid(0,pdfFilename.size()-5) + ".txt")
     , textFromTxt()
     , pdfToTextBashCommand("pdftotext -enc UTF-8 -layout ")
-    , removeFileBashCommand("rm ")
+    , removeFileBashCommand("rm -- ")
     , isFirstWithThisPdf(true)
     , errorMessage()
 {}
@@ -54,6 +54,8 @@ bool PdfReader::readFromTxt()
 
 bool PdfReader::removeTxtFile()
 {
+    txtFileName.push_front("\"");
+    txtFileName.push_back("\"");
     const int retValue = executeBashCommand(removeFileBashCommand, txtFileName);
 
     if (retValue == -1 || WEXITSTATUS(retValue) != 0)
@@ -100,7 +102,8 @@ const QString& PdfReader::getTxt()
 void PdfReader::changePdfFilename(const QString& pdfFilename)
 {
     pdfFileName = pdfFilename;
-    txtFileName = pdfFilename.mid(0, pdfFileName.size()-4) + ".txt";
+    pdfFileName.replace(" ", "\\\ ");
+    txtFileName = pdfFilename.mid(0, pdfFilename.size()-4) + ".txt";
     isFirstWithThisPdf = true;
 }
 
