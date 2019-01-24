@@ -1,11 +1,15 @@
 #include "window.h"
 
 #include <QtWidgets>
+#include <QtConcurrent/QtConcurrent>
+#include <QtConcurrent/qtconcurrentrun.h>
+#include <QThread>
+#include <QFuture>
 
 Window::Window(QWidget *parent)
     : QWidget(parent)
     , pdfReader("")
-    , plagiarismChecker(PlagiarismChecker("",""))
+    //, plagiarismChecker(PlagiarismChecker("",""))
 {
     setWindowTitle(tr("Antyplagiat"));
 
@@ -24,16 +28,21 @@ Window::Window(QWidget *parent)
 
     connect(browseButton1, &QAbstractButton::clicked, this, [this]()
     {
-        Window::browse(filename1, text1, text1TextBrowser, directoryComboBox1);
+        Window::browse(text1TextBrowser, directoryComboBox1);
     });
 
     connect(browseButton2, &QAbstractButton::clicked, this, [this]()
     {
-        Window::browse(filename2, text2, text2TextBrowser, directoryComboBox2);
+        Window::browse(text2TextBrowser, directoryComboBox2);
     });
+
     connect(validateButton1, &QAbstractButton::clicked, this, &Window::validate);
+
     connect(directoryComboBox1->lineEdit(), &QLineEdit::returnPressed, this, &Window::animateBrowseClick);
     connect(directoryComboBox2->lineEdit(), &QLineEdit::returnPressed, this, &Window::animateBrowseClick);
+
+    connect(this, &Window::valueChanged, plagiarismChecker, &PlagiarismChecker::setValue);
+    connect(plagiarismChecker, &PlagiarismChecker::resultReady, this, &Window::handleResults);
 
     mainLayout->addWidget(directoryComboBox1, 0, 0);
     mainLayout->addWidget(browseButton1, 0, 1);
@@ -48,18 +57,18 @@ Window::Window(QWidget *parent)
 
     connect(new QShortcut(QKeySequence::Quit, this), &QShortcut::activated,
             qApp, &QApplication::quit);
+
+    //ale moloch
 }
 
-void Window::browse(QString& filename, QString& text, QTextBrowser* textTextBrowser, QComboBox* directoryComboBox)
+void Window::browse(QTextBrowser* textTextBrowser, QComboBox* directoryComboBox)
 {
     QString directory =
-        QDir::toNativeSeparators(
-            QFileDialog::getOpenFileName(this
-                                         , tr("Bowse PDF file")
-                                         , QDir::currentPath()
-                                         , tr("PDF file (*.pdf)")));
-    filename = directory;
-
+            QDir::toNativeSeparators(
+                QFileDialog::getOpenFileName(this
+                                             , tr("Bowse PDF file")
+                                             , QDir::currentPath()
+                                             , tr("PDF file (*.pdf)")));
     if (!directory.isEmpty())
     {
         if (directoryComboBox->findText(directory) == -1)
@@ -67,66 +76,20 @@ void Window::browse(QString& filename, QString& text, QTextBrowser* textTextBrow
         directoryComboBox->setCurrentIndex(directoryComboBox->findText(directory));
     }
 
-    pdfReader.changePdfFilename(filename);
+    pdfReader.changePdfFilename(directory);
 
-    text = pdfReader.getTxt();
-    textTextBrowser->setText(text);
+    textTextBrowser->setText(pdfReader.getTxt());
 }
 
 void Window::validate()
 {
-    text2TextBrowser->textCursor().clearSelection();
-
-    plagiarismChecker.setPattern(text1TextBrowser->textCursor().selectedText());
-    plagiarismChecker.setText(text2);
-
-    QString error = plagiarismChecker.validate();
-    if(error != "")
+    if(text1TextBrowser->textCursor().selectedText().isEmpty() || text2TextBrowser->toPlainText().isEmpty())
     {
-        text2TextBrowser->setText(error);
+        text2TextBrowser->setText("Empty !!!");
     }
     else
     {
-        plagiarismChecker.checker();
-        auto result = plagiarismChecker.getResultOfPlagiarismChecking();
-
-        if(result.empty())
-        {
-            QMessageBox msgBox;
-            msgBox.setText("The pattern was not found.");
-            msgBox.setStandardButtons(QMessageBox::Cancel);
-            msgBox.exec();
-        }
-        else
-        {
-
-            QMessageBox msgBox;
-            QString string = "The pattern was found at positions nr: ";
-            for(auto i : result)
-            {
-                string += "\n";
-                string += QString::number(i.first);
-            }
-            msgBox.setText(string);
-            msgBox.setStandardButtons(QMessageBox::Cancel);
-            msgBox.exec();
-            QTextCharFormat charFormat;
-            charFormat.setBackground(Qt::red);
-            QTextCursor cursor = text2TextBrowser->textCursor();
-            cursor.select(QTextCursor::Document);
-
-            QList<QTextEdit::ExtraSelection> extraSelections;
-            for(auto i : result)
-            {
-                QTextEdit::ExtraSelection selection;
-                selection.format = charFormat;
-                selection.cursor = cursor;
-                selection.cursor.setPosition(i.first);
-                selection.cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, i.second);
-                extraSelections.append(selection);
-            }
-            text2TextBrowser->setExtraSelections(extraSelections);
-        }
+        emit valueChanged(text1TextBrowser->textCursor().selectedText(), text2TextBrowser->toPlainText());
     }
 }
 
@@ -141,3 +104,52 @@ QComboBox *Window::createComboBox(const QString &text)
 
 void Window::animateBrowseClick()
 {}
+
+void Window::handleResults(const QVector<QPair<int, int>>& result)
+{
+    wasPatternFoundQMessageBoxInfo(result);
+    textBrowserUpdate(result);
+}
+
+void Window::wasPatternFoundQMessageBoxInfo(const QVector<QPair<int, int>>& result)
+{
+    QMessageBox msgBox;
+    QString     info = "The pattern was";
+
+    if(result.empty())
+    {
+        info += " not found.";
+    }
+    else
+    {
+        info += " found at positions nr: ";
+        for(const auto& i : result)
+        {
+            info += "\n";
+            info += QString::number(i.first);
+        }
+    }
+
+    msgBox.setText(info);
+    msgBox.setStandardButtons(QMessageBox::Cancel);
+    msgBox.exec();
+}
+
+void Window::textBrowserUpdate(const QVector<QPair<int, int>>& result)
+{
+    text2TextBrowser->textCursor().clearSelection();
+
+    QList<QTextEdit::ExtraSelection> extraSelections;
+    for(const auto& i : result)
+    {
+        QTextEdit::ExtraSelection selection;
+        selection.format = QTextCharFormat().setBackground(Qt::Red);
+        selection.cursor = text2TextBrowser->textCursor();
+        selection.cursor.select(QTextCursor::Document);
+        selection.cursor.setPosition(i.first);
+        selection.cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, i.second);
+        extraSelections.append(selection);
+    }
+
+    text2TextBrowser->setExtraSelections(extraSelections);
+}

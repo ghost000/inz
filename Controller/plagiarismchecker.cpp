@@ -3,36 +3,16 @@
 #include <algorithm>
 #include <functional>
 
-PlagiarismChecker::PlagiarismChecker(const QString& Pattern, const QString& Text)
-    : text(Text)
-    , pattern(Pattern)
-    , result()
-{
-}
-
-
-void PlagiarismChecker::setPattern(const QString& Pattern)
+void PlagiarismChecker::setValue(const QString& Pattern, const QString& Text)
 {
     pattern = Pattern;
-}
-
-void PlagiarismChecker::setText(const QString& Text)
-{
-    text = Text;
-}
-
-QString PlagiarismChecker::validate()
-{
-    if(text.isEmpty() || pattern.isEmpty())
-    {
-        return "One text is empty. This is error !!!";
-    }
-    return "";
+    text    = Text;
 }
 
 void PlagiarismChecker::checker()
 {
     result.clear();
+
     const auto buffText    = text.toStdU16String();
     const auto buffPattern = pattern.toStdU16String();
 
@@ -42,16 +22,20 @@ void PlagiarismChecker::checker()
 
     while(it != buffText.end())
     {
-        result.push_back(std::make_pair(it - buffText.begin(), buffPattern.size()));
+        result.push_back(qMakePair(it - buffText.begin(), buffPattern.size()));
+
         it++;
+
         it = std::search(it, buffText.end(),
                          std::boyer_moore_searcher(
                              buffPattern.begin(), buffPattern.end()));
     }
+
+    emit resultReady(result);
 }
 
-const std::vector<std::pair<int, int>>& PlagiarismChecker::getResultOfPlagiarismChecking()
+void PlagiarismChecker::resultReady(QVector<QPair<int, int>> &Result)
 {
-    return result;
+    Result = result;
 }
 

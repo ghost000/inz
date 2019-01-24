@@ -1,21 +1,29 @@
 #pragma once
 
 #include <QString>
-#include <vector>
+#include <QVector>
+#include <QPair>
+#include <QObject>
 
-class PlagiarismChecker
+class PlagiarismChecker : public QObject
 {
+    Q_OBJECT
+
 public:
-    explicit PlagiarismChecker(const QString& Pattern, const QString& Text);
-    const std::vector<std::pair<int, int>>& getResultOfPlagiarismChecking();
-    QString                                 validate();
-    void                                    checker();
-    void                                    setPattern(const QString& Pattern);
-    void                                    setText(const QString& Text);
+    PlagiarismChecker() = default;
+    void run();
+    bool Stop;
+
+public slots:
+    void setValue(const QString& Pattern, const QString& Text);
+
+signals:
+    void resultReady(QVector<QPair<int, int>> &result);
 
 private:
-    QString                          text;
-    QString                          pattern;
-    std::vector<std::pair<int, int>> result;
-};
+    void                     checker();
 
+    QString                  text;
+    QString                  pattern;
+    QVector<QPair<int, int>> result;
+};

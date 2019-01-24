@@ -17,26 +17,36 @@ public:
     explicit Window(QWidget* parent = nullptr);
 
 private slots:
-    void browse(QString& filename, QString& text, QTextBrowser* textTextBrowser, QComboBox* directoryComboBox);
+    void browse(QTextBrowser* textTextBrowser, QComboBox* directoryComboBox);
     void validate();
     void animateBrowseClick();
 
+public slots:
+    void handleResults(const QVector<QPair<int, int>> &result);
+
+signals:
+    void valueChanged(const QString& Pattern, const QString& Text);
+
 private:
-    void       clear();
+    void textBrowserUpdate(const QVector<QPair<int, int>> &result);
+    void wasPatternFoundQMessageBoxInfo(const QVector<QPair<int, int>> &result);
+
     QComboBox* createComboBox(const QString &text);
 
-    QString            filename1;
-    QString            filename2;
     QTextBrowser       *text1TextBrowser;
     QTextBrowser       *text2TextBrowser;
+
     QComboBox          *directoryComboBox1;
     QComboBox          *directoryComboBox2;
+
     QPushButton        *browseButton1;
     QPushButton        *browseButton2;
     QPushButton        *validateButton1;
     QPushButton        *clearButton;
+
     PdfReader          pdfReader;
-    QString            text1;
-    QString            text2;
+
     PlagiarismChecker  plagiarismChecker;
 };
+
+//God object
