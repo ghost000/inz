@@ -33,9 +33,6 @@ Window::Window(QWidget *parent)
 
     connect(validateButton1, &QAbstractButton::clicked, this, &Window::validate);
 
-    connect(directoryComboBox1->lineEdit(), &QLineEdit::returnPressed, this, &Window::animateBrowseClick);
-    connect(directoryComboBox2->lineEdit(), &QLineEdit::returnPressed, this, &Window::animateBrowseClick);
-
     connect(this, SIGNAL(valueTextChanged(const QString&, const QString&)), &plagiarismChecker, SLOT(setValue(const QString&, const QString&)));
     connect(&plagiarismChecker, SIGNAL(resultReady(QVector<QPair<int, int>> &)), this, SLOT(handleResults(QVector<QPair<int, int>> &)));
 
@@ -78,7 +75,6 @@ void Window::browse(QTextBrowser* textTextBrowser, QComboBox* directoryComboBox)
     else
     {
         pdfReader.changePdfFilename(directory);
-
         textTextBrowser->setText(pdfReader.getTxt());
     }
 }
@@ -102,14 +98,11 @@ void Window::validate()
 QComboBox *Window::createComboBox(const QString &text)
 {
     QComboBox *comboBox = new QComboBox;
-    comboBox->setEditable(true);
+    comboBox->setEditable(false);
     comboBox->addItem(text);
     comboBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     return comboBox;
 }
-
-void Window::animateBrowseClick()
-{}
 
 void Window::handleResults(QVector<QPair<int, int>>& result)
 {
@@ -161,6 +154,7 @@ void Window::textBrowserUpdate(const QVector<QPair<int, int>>& result)
 void Window::showMsgBox(const QString& textToShow)
 {
     QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("Antyplagiat"));
     msgBox.setText(textToShow);
     msgBox.setStandardButtons(QMessageBox::Cancel);
     msgBox.exec();

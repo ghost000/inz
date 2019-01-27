@@ -19,7 +19,6 @@ public:
 private slots:
     void browse(QTextBrowser* textTextBrowser, QComboBox* directoryComboBox);
     void validate();
-    void animateBrowseClick();
 
 public slots:
     void handleResults(QVector<QPair<int, int>> &result);
