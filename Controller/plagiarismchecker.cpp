@@ -5,8 +5,12 @@
 
 void PlagiarismChecker::setValue(const QString& Pattern, const QString& Text)
 {
-    pattern = Pattern;
-    text    = Text;
+    if(pattern != Pattern || text != Text)
+    {
+        pattern = Pattern;
+        text = Text;
+        checker();
+    }
 }
 
 void PlagiarismChecker::checker()
@@ -32,10 +36,5 @@ void PlagiarismChecker::checker()
     }
 
     emit resultReady(result);
-}
-
-void PlagiarismChecker::resultReady(QVector<QPair<int, int>> &Result)
-{
-    Result = result;
 }
 

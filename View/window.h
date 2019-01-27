@@ -22,14 +22,15 @@ private slots:
     void animateBrowseClick();
 
 public slots:
-    void handleResults(const QVector<QPair<int, int>> &result);
+    void handleResults(QVector<QPair<int, int>> &result);
 
 signals:
-    void valueChanged(const QString& Pattern, const QString& Text);
+    void valueTextChanged(const QString& Pattern, const QString& Text);
 
 private:
     void textBrowserUpdate(const QVector<QPair<int, int>> &result);
     void wasPatternFoundQMessageBoxInfo(const QVector<QPair<int, int>> &result);
+    void showMsgBox(const QString& textToShow);
 
     QComboBox* createComboBox(const QString &text);
 
