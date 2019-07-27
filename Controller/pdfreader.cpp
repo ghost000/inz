@@ -15,22 +15,21 @@ PdfReader::PdfReader(const QString& pdfFilename)
 
 int PdfReader::executeBashCommand(const QString& bashCommand, const QString& fileName)
 {
-    const QString buff(bashCommand + fileName);
-    const QByteArray ba = buff.toLocal8Bit();
-    const char *c_str = ba.data();
-    return std::system(c_str);
+    return std::system(QString(bashCommand + fileName).toLocal8Bit().data());
 }
 
-bool PdfReader::convertPdfToTxt()
+bool PdfReader::wasBashCommandCorrectlyExecuted(int retValue)
 {
-    const int retValue = executeBashCommand(pdfToTextBashCommand, pdfFileName);
-
     if (retValue == -1 || WEXITSTATUS(retValue) != 0)
     {
         return false;
     }
-
     return true;
+}
+
+bool PdfReader::convertPdfToTxt()
+{
+    return wasBashCommandCorrectlyExecuted(executeBashCommand(pdfToTextBashCommand, pdfFileName));
 }
 
 bool PdfReader::readFromTxt()
@@ -56,14 +55,7 @@ bool PdfReader::removeTxtFile()
 {
     txtFileName.push_front("\"");
     txtFileName.push_back("\"");
-    const int retValue = executeBashCommand(removeFileBashCommand, txtFileName);
-
-    if (retValue == -1 || WEXITSTATUS(retValue) != 0)
-    {
-        return false;
-    }
-
-    return true;
+    return wasBashCommandCorrectlyExecuted(executeBashCommand(removeFileBashCommand, txtFileName));
 }
 
 const QString& PdfReader::getTxt()
@@ -91,7 +83,7 @@ const QString& PdfReader::getTxt()
         }
     }
 
-    if(errorMessage == "")
+    if(errorMessage.isEmpty())
     {
         return textFromTxt;
     }

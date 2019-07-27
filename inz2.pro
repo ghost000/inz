@@ -34,13 +34,11 @@ QT       += concurrent
                                                                                             /usr/src/googletest/googletest/src/gtest-all.cc \
                                                                                             /usr/src/googletest/googlemock/src/gmock-all.cc \
                                                                                             View/window.cpp \
-                                                                                            Model/model.cpp \
                                                                                             Controller/plagiarismchecker.cpp
 
                                                                                             HEADERS += \
                                                                                                     Controller/pdfreader.h \
                                                                                                     View/window.h \
-                                                                                                    Model/model.h \
                                                                                                     Controller/plagiarismchecker.h
 
                                                                                                     FORMS +=

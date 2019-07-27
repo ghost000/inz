@@ -5,9 +5,14 @@
 #include "Controller/pdfreader.h"
 #include "Controller/plagiarismchecker.h"
 
-class QPushButton;
-class QComboBox;
+class QListWidgetItem;
 class QTextBrowser;
+class QFormLayout;
+class QGridLayout;
+class QListWidget;
+class QPushButton;
+class QScrollBar;
+class QComboBox;
 class QTextEdit;
 
 class Window : public QWidget
@@ -19,6 +24,7 @@ public:
 private slots:
     void browse(QTextBrowser* textTextBrowser, QComboBox* directoryComboBox);
     void validate();
+    void onFindsBrowseItemClicked(QListWidgetItem *item);
 
 public slots:
     void handleResults(QVector<QPair<int, int>> &result);
@@ -27,26 +33,37 @@ signals:
     void valueTextChanged(const QString& Pattern, const QString& Text);
 
 private:
+    void setUpUI();
+    void connectSlotsAndSignals();
+    const auto prepareExtraSelections(const QVector<QPair<int, int>>& result);
     void textBrowserUpdate(const QVector<QPair<int, int>> &result);
+    void enableScrollButton(int size);
     void wasPatternFoundQMessageBoxInfo(const QVector<QPair<int, int>> &result);
     void showMsgBox(const QString& textToShow);
+    void moveScrollBar(int count);
+    void changeColorOfSelection(const QBrush &brush, const int count);
+    void prev();
+    void next();
 
     QComboBox* createComboBox(const QString &text);
 
-    QTextBrowser       *text1TextBrowser;
-    QTextBrowser       *text2TextBrowser;
+    QTextBrowser      *textBrowserLeft;
+    QTextBrowser      *textBrowserRight;
 
-    QComboBox          *directoryComboBox1;
-    QComboBox          *directoryComboBox2;
+    QComboBox         *directoryComboBoxLeft;
+    QComboBox         *directoryComboBoxRight;
 
-    QPushButton        *browseButton1;
-    QPushButton        *browseButton2;
-    QPushButton        *validateButton1;
-    QPushButton        *clearButton;
+    QPushButton       *browseButtonLeft;
+    QPushButton       *browseButtonRight;
+    QPushButton       *validateButton;
+    QPushButton       *nextButton;
+    QPushButton       *previousButton;
+    QListWidget       *findsBrowse;
 
-    PdfReader          pdfReader;
+    QGridLayout       *mainLayout;
+    QFormLayout       *layout;
 
-    PlagiarismChecker  plagiarismChecker;
+    PdfReader         pdfReader;
+    PlagiarismChecker plagiarismChecker;
+    int               currentScrollItem;
 };
-
-//God object

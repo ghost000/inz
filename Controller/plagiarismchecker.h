@@ -10,10 +10,8 @@ class PlagiarismChecker : public QObject
     Q_OBJECT
 
 public:
-    PlagiarismChecker() {}
-    virtual ~PlagiarismChecker(){}
-    //void run();
-    //bool Stop;
+    PlagiarismChecker()          = default;
+    virtual ~PlagiarismChecker() = default;
 
 public slots:
     void setValue(const QString& Pattern, const QString& Text);
@@ -24,7 +22,6 @@ signals:
 private:
     void checker();
 
-    QString                  text;
-    QString                  pattern;
-    QVector<QPair<int, int>> result;
+    QString text;
+    QString pattern;
 };

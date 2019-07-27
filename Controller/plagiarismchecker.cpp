@@ -15,26 +15,25 @@ void PlagiarismChecker::setValue(const QString& Pattern, const QString& Text)
 
 void PlagiarismChecker::checker()
 {
-    result.clear();
-
+    QVector<QPair<int, int>> result;
     const auto buffText    = text.toStdU16String();
     const auto buffPattern = pattern.toStdU16String();
 
-    auto it = std::search(buffText.begin(), buffText.end(),
+    auto resultIt = std::search(buffText.begin(), buffText.end(),
                           std::boyer_moore_searcher(
                               buffPattern.begin(), buffPattern.end()));
 
-    while(it != buffText.end())
+    while(resultIt != buffText.end())
     {
-        result.push_back(qMakePair(it - buffText.begin(), buffPattern.size()));
+        result.push_back(qMakePair(resultIt - buffText.begin(), buffPattern.size()));
 
-        it++;
+        resultIt++; //moves pointer to beginning of indicated text.
+                    //otherwise it always takes same beginning of text and spins around.
 
-        it = std::search(it, buffText.end(),
+        resultIt = std::search(resultIt, buffText.end(),
                          std::boyer_moore_searcher(
                              buffPattern.begin(), buffPattern.end()));
     }
 
     emit resultReady(result);
 }
-

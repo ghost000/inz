@@ -1,66 +1,108 @@
 #include "window.h"
 
-#include <QtWidgets>
+#include <QListWidgetItem>
+#include <QApplication>
+#include <QTextBrowser>
+#include <QFileDialog>
+#include <QFormLayout>
+#include <QGridLayout>
+#include <QListWidget>
+#include <QMessageBox>
+#include <QPushButton>
+#include <QScrollBar>
+#include <QComboBox>
+#include <QShortcut>
+#include <QTextEdit>
+#include <QLabel>
+#include <QDir>
 
 Window::Window(QWidget *parent)
     : QWidget(parent)
+    , textBrowserLeft(new QTextBrowser())
+    , textBrowserRight(new QTextBrowser())
+    , directoryComboBoxLeft(createComboBox(QDir::toNativeSeparators(QDir::currentPath())))
+    , directoryComboBoxRight(createComboBox(QDir::toNativeSeparators(QDir::currentPath())))
+    , browseButtonLeft(new QPushButton(tr("&Browse first pdf"),this))
+    , browseButtonRight(new QPushButton(tr("&Browse second pdf"),this))
+    , validateButton(new QPushButton(tr("&Validate"),this))
+    , nextButton(new QPushButton(tr("&Next"),this))
+    , previousButton(new QPushButton(tr("&Previous"),this))
+    , findsBrowse(new QListWidget())
+    , mainLayout(new QGridLayout(this))
+    , layout(new QFormLayout())
     , pdfReader("")
+    , currentScrollItem(0)
+{
+    setUpUI();
+    connectSlotsAndSignals();
+}
+
+void Window::setUpUI()
 {
     setWindowTitle(tr("Antyplagiat"));
 
-    browseButton1           = new QPushButton(tr("&Browse first pdf"),this);
-    browseButton2           = new QPushButton(tr("&Browse second pdf"),this);
-    validateButton1         = new QPushButton(tr("&Validate"),this);
-    text1TextBrowser        = new QTextBrowser();
-    text2TextBrowser        = new QTextBrowser();
-    QGridLayout *mainLayout = new QGridLayout(this);
+    textBrowserLeft->setReadOnly(true);
+    textBrowserRight->setReadOnly(true);
+    nextButton->setEnabled(false);
+    previousButton->setEnabled(false);
 
-    directoryComboBox1 = createComboBox(QDir::toNativeSeparators(QDir::currentPath()));
-    directoryComboBox2 = createComboBox(QDir::toNativeSeparators(QDir::currentPath()));
-
-    text1TextBrowser->setReadOnly(true);
-    text2TextBrowser->setReadOnly(true);
-
-    connect(browseButton1, &QAbstractButton::clicked, this, [this]()
-    {
-        Window::browse(text1TextBrowser, directoryComboBox1);
-    });
-
-    connect(browseButton2, &QAbstractButton::clicked, this, [this]()
-    {
-        Window::browse(text2TextBrowser, directoryComboBox2);
-    });
-
-    connect(validateButton1, &QAbstractButton::clicked, this, &Window::validate);
-
-    connect(this, SIGNAL(valueTextChanged(const QString&, const QString&)), &plagiarismChecker, SLOT(setValue(const QString&, const QString&)));
-    connect(&plagiarismChecker, SIGNAL(resultReady(QVector<QPair<int, int>> &)), this, SLOT(handleResults(QVector<QPair<int, int>> &)));
-
-    mainLayout->addWidget(directoryComboBox1, 0, 0);
-    mainLayout->addWidget(browseButton1, 0, 1);
-    mainLayout->addWidget(directoryComboBox2, 0, 2);
-    mainLayout->addWidget(browseButton2, 0, 3);
-    mainLayout->addWidget(validateButton1, 0, 4);
+    mainLayout->addWidget(directoryComboBoxLeft, 0, 0);
+    mainLayout->addWidget(browseButtonLeft, 0, 1);
+    mainLayout->addWidget(directoryComboBoxRight, 0, 2);
+    mainLayout->addWidget(browseButtonRight, 0, 3);
+    layout->addRow(validateButton);
+    layout->addRow(findsBrowse);
+    layout->addRow(nextButton);
+    layout->addRow(previousButton);
+    mainLayout->addLayout(layout, 0, 4, 0, 1);
 
     mainLayout->addWidget(new QLabel(tr("PDF 1 text:")), 1, 0, 1, 1);
-    mainLayout->addWidget(text1TextBrowser, 2, 0, 1, 2);
+    mainLayout->addWidget(textBrowserLeft, 2, 0, 1, 2);
     mainLayout->addWidget(new QLabel(tr("PDF 2 text:")), 1, 2, 1, 1);
-    mainLayout->addWidget(text2TextBrowser, 2, 2, 1, 2);
+    mainLayout->addWidget(textBrowserRight, 2, 2, 1, 2);
+}
 
-    connect(new QShortcut(QKeySequence::Quit, this), &QShortcut::activated,
-            qApp, &QApplication::quit);
+void Window::connectSlotsAndSignals()
+{
+    connect(browseButtonLeft, &QAbstractButton::clicked, this, [this]()
+    {
+        Window::browse(textBrowserLeft, directoryComboBoxLeft);
+    });
 
-    //ale moloch
+    connect(browseButtonRight, &QAbstractButton::clicked, this, [this]()
+    {
+        Window::browse(textBrowserRight, directoryComboBoxRight);
+    });
+
+    connect(findsBrowse, SIGNAL(itemClicked(QListWidgetItem*)),
+            this, SLOT(onFindsBrowseItemClicked(QListWidgetItem*)));
+
+    connect(validateButton, &QAbstractButton::clicked, this, &Window::validate);
+    connect(nextButton, &QAbstractButton::clicked, this, &Window::next);
+    connect(previousButton, &QAbstractButton::clicked, this, &Window::prev);
+
+    connect(this, SIGNAL(valueTextChanged(const QString&, const QString&)),
+            &plagiarismChecker, SLOT(setValue(const QString&, const QString&)));
+
+    connect(&plagiarismChecker, SIGNAL(resultReady(QVector<QPair<int, int>> &)),
+            this, SLOT(handleResults(QVector<QPair<int, int>> &)));
+
+    connect(new QShortcut(QKeySequence::Quit, this),
+            &QShortcut::activated, qApp, &QApplication::quit);
+}
+
+void Window::onFindsBrowseItemClicked(QListWidgetItem* item)
+{    
+    changeColorOfSelection(Qt::red, currentScrollItem);
+    currentScrollItem = item->listWidget()->currentRow();
+    moveScrollBar(currentScrollItem);
 }
 
 void Window::browse(QTextBrowser* textTextBrowser, QComboBox* directoryComboBox)
 {
-    QString directory =
-            QDir::toNativeSeparators(
-                QFileDialog::getOpenFileName(this
-                                             , tr("Bowse PDF file")
-                                             , QDir::currentPath()
-                                             , tr("PDF file (*.pdf)")));
+    QString directory = QDir::toNativeSeparators( QFileDialog::getOpenFileName(
+                                                      this, tr("Bowse PDF file"),
+                                                      QDir::currentPath(), tr("PDF file (*.pdf)")));
     if (!directory.isEmpty())
     {
         if (directoryComboBox->findText(directory) == -1)
@@ -81,21 +123,21 @@ void Window::browse(QTextBrowser* textTextBrowser, QComboBox* directoryComboBox)
 
 void Window::validate()
 {
-    if(text1TextBrowser->toPlainText().isEmpty() || text2TextBrowser->toPlainText().isEmpty())
+    if(textBrowserLeft->toPlainText().isEmpty() || textBrowserRight->toPlainText().isEmpty())
     {
         showMsgBox("Please select two pdf files !!!");
     }
-    else if(text1TextBrowser->textCursor().selectedText().isEmpty())
+    else if(textBrowserLeft->textCursor().selectedText().isEmpty())
     {
         showMsgBox("Please select text in first pdf file !!!");
     }
     else
     {
-        emit valueTextChanged(text1TextBrowser->textCursor().selectedText(), text2TextBrowser->toPlainText());
+        emit valueTextChanged(textBrowserLeft->textCursor().selectedText(), textBrowserRight->toPlainText());
     }
 }
 
-QComboBox *Window::createComboBox(const QString &text)
+QComboBox* Window::createComboBox(const QString &text)
 {
     QComboBox *comboBox = new QComboBox;
     comboBox->setEditable(false);
@@ -113,6 +155,7 @@ void Window::handleResults(QVector<QPair<int, int>>& result)
 void Window::wasPatternFoundQMessageBoxInfo(const QVector<QPair<int, int>>& result)
 {
     QString info = "The pattern was";
+    findsBrowse->clear();
     if(result.empty())
     {
         info += " not found.";
@@ -124,15 +167,15 @@ void Window::wasPatternFoundQMessageBoxInfo(const QVector<QPair<int, int>>& resu
         {
             info += "\n";
             info += QString::number(i.first);
+            findsBrowse->addItem(QString::number(i.first));
         }
+        findsBrowse->item(0)->setSelected(true);
     }
-
     showMsgBox(info);
 }
 
-void Window::textBrowserUpdate(const QVector<QPair<int, int>>& result)
+const auto Window::prepareExtraSelections(const QVector<QPair<int, int>>& result)
 {
-    text2TextBrowser->textCursor().clearSelection();
     QTextCharFormat charFormat;
     charFormat.setBackground(Qt::red);
 
@@ -141,14 +184,34 @@ void Window::textBrowserUpdate(const QVector<QPair<int, int>>& result)
     {
         QTextEdit::ExtraSelection selection;
         selection.format = charFormat;
-        selection.cursor = text2TextBrowser->textCursor();
+        selection.cursor = textBrowserRight->textCursor();
         selection.cursor.select(QTextCursor::Document);
         selection.cursor.setPosition(i.first);
         selection.cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, i.second);
         extraSelections.append(selection);
     }
+    return extraSelections;
+}
 
-    text2TextBrowser->setExtraSelections(extraSelections);
+void Window::textBrowserUpdate(const QVector<QPair<int, int>>& result)
+{
+    enableScrollButton(result.size());
+    textBrowserRight->textCursor().clearSelection();
+    textBrowserRight->setExtraSelections(prepareExtraSelections(result));
+}
+
+void Window::enableScrollButton(int size)
+{
+    if (size > 1)
+    {
+        nextButton->setEnabled(true);
+        previousButton->setEnabled(true);
+    }
+    else
+    {
+        nextButton->setEnabled(false);
+        previousButton->setEnabled(false);
+    }
 }
 
 void Window::showMsgBox(const QString& textToShow)
@@ -158,4 +221,48 @@ void Window::showMsgBox(const QString& textToShow)
     msgBox.setText(textToShow);
     msgBox.setStandardButtons(QMessageBox::Cancel);
     msgBox.exec();
+}
+
+void Window::moveScrollBar(int count)
+{
+    const double offsetInPercent = (double)textBrowserRight->extraSelections().at(count).cursor.selectionStart()
+            / (double)textBrowserRight->toPlainText().size() * 100.00;
+    const double offsetForScrollBar = offsetInPercent / 100.00 * textBrowserRight->verticalScrollBar()->maximum();
+
+    textBrowserRight->verticalScrollBar()->setValue(offsetForScrollBar);
+    findsBrowse->item(count)->setSelected(true);
+    findsBrowse->scrollToItem(findsBrowse->item(count));
+    changeColorOfSelection(Qt::green, count);
+}
+
+void Window::changeColorOfSelection(const QBrush &brush, const int count)
+{
+    QTextCharFormat charFormat;
+    charFormat.setBackground(brush);
+    QList<QTextEdit::ExtraSelection> extraSelection = textBrowserRight->extraSelections();
+    extraSelection[count].format = charFormat;
+    textBrowserRight->textCursor().clearSelection();
+    textBrowserRight->setExtraSelections(extraSelection);
+}
+
+void Window::next()
+{
+    changeColorOfSelection(Qt::red, currentScrollItem);
+    currentScrollItem++;
+    if(currentScrollItem == textBrowserRight->extraSelections().size())
+    {
+        currentScrollItem = 0;
+    }
+    moveScrollBar(currentScrollItem);
+}
+
+void Window::prev()
+{
+    changeColorOfSelection(Qt::red, currentScrollItem);
+    currentScrollItem--;
+    if(currentScrollItem < 0)
+    {
+        currentScrollItem = textBrowserRight->extraSelections().size()-1;
+    }
+    moveScrollBar(currentScrollItem);
 }
